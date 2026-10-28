@@ -140,7 +140,7 @@ func TestAddress(t *testing.T) {
 
 func TestPage(t *testing.T) {
 	_, ts := start(t, at(t, "127.0.0.1:1"))
-	for _, path := range []string{"/", "/app.js", "/style.css", "/manifest.json", "/healthz"} {
+	for _, path := range []string{"/", "/app.js", "/style.css", "/manifest.json", "/sw.js", "/healthz"} {
 		if res := do(t, ts, "GET", path, ""); res.StatusCode != http.StatusOK {
 			t.Errorf("%s: %s", path, res.Status)
 		}

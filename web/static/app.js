@@ -12,6 +12,8 @@ const EDIT_GRACE = 1500;
 const SEND_INTERVAL = 100;
 // How long a delete button waits for the tap confirming it.
 const CONFIRM_TIME = 3000;
+// Where the page keeps the server's last state, to show it while loading.
+const STATE_KEY = 'state';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -123,26 +125,46 @@ function apply(st) {
         els.address.value = st.address;
     }
     if (st.connected && Date.now() - app.editedAt >= EDIT_GRACE) {
-        const p = st.props;
-        app.power = p.on;
-        app.bright = p.bright;
-        app.ct = p.ct;
-        // The hue and saturation the light reports in white mode are stale:
-        // keep those the sliders show.
-        if (p.color_mode === MODE_HSV) {
-            [app.hue, app.sat] = [p.hue, p.sat];
-        } else if (p.color_mode === MODE_RGB) {
-            [app.hue, app.sat] = rgbHueSat(p.rgb);
-        }
-        app.lightMode = p.color_mode === MODE_CT ? 'white' : 'color';
-        // Follow the light's mode only when it changes, so that a mode chosen
-        // here stays while the light keeps shining as before.
-        if (p.color_mode !== prevMode) {
-            app.mode = app.lightMode;
-            if (app.tab !== 'scheme') app.tab = app.mode;
-        }
+        takeProps(st.props, prevMode);
     }
+    try {
+        localStorage.setItem(STATE_KEY, JSON.stringify(st));
+    } catch {}
     render();
+}
+
+// takeProps sets the controls to the light's state.
+function takeProps(p, prevMode) {
+    app.power = p.on;
+    app.bright = p.bright;
+    app.ct = p.ct;
+    // The hue and saturation the light reports in white mode are stale:
+    // keep those the sliders show.
+    if (p.color_mode === MODE_HSV) {
+        [app.hue, app.sat] = [p.hue, p.sat];
+    } else if (p.color_mode === MODE_RGB) {
+        [app.hue, app.sat] = rgbHueSat(p.rgb);
+    }
+    app.lightMode = p.color_mode === MODE_CT ? 'white' : 'color';
+    // Follow the light's mode only when it changes, so that a mode chosen
+    // here stays while the light keeps shining as before.
+    if (p.color_mode !== prevMode) {
+        app.mode = app.lightMode;
+        if (app.tab !== 'scheme') app.tab = app.mode;
+    }
+}
+
+// restore shows the state saved by the last visit, with the controls waiting
+// for the server, so that the page shows at once.
+function restore() {
+    let st;
+    try {
+        st = JSON.parse(localStorage.getItem(STATE_KEY));
+    } catch {}
+    if (!st || !st.props) return;
+    if (st.props.color_mode) takeProps(st.props);
+    app.server = { ...st, loading: true, connected: false, error: '' };
+    els.address.value = st.address || '';
 }
 
 // watch keeps the page showing the server's state: each request waits until
@@ -158,6 +180,7 @@ async function watch() {
             apply(st);
         } catch (err) {
             version = 0;
+            app.server = { ...app.server, loading: false, connected: false };
             app.error = `Can't reach the server: ${err.message}`;
             render();
             await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -365,11 +388,13 @@ function render() {
     const p = st.props;
     const connected = st.connected;
 
-    els.name.textContent = (connected && p.name) || 'Yeelight';
+    // While connecting, the name is the one last read.
+    els.name.textContent = ((connected || st.loading) && p.name) || 'Yeelight';
     document.title = els.name.textContent;
     const error = app.error || st.error;
     els.statusLine.classList.toggle('error', !st.loading && !!error);
-    els.statusLine.textContent = st.loading ? 'Looking for the light…' : error || p.host || '';
+    els.statusLine.textContent = !st.loading ? error || p.host || ''
+        : st.address ? `Connecting to ${st.address}…` : 'Looking for the light…';
     els.spinner.classList.toggle('active', st.loading);
 
     const on = app.power && connected;
@@ -379,7 +404,8 @@ function render() {
     els.power.setAttribute('aria-pressed', on);
     els.power.style.setProperty('--glow', css(glow));
     els.power.style.setProperty('--level', 0.35 + 0.65 * app.bright / 100);
-    els.powerStatus.textContent = !connected ? 'Not connected' : on ? `On · ${app.bright}%` : 'Off';
+    els.powerStatus.textContent = connected ? (on ? `On · ${app.bright}%` : 'Off')
+        : st.loading ? 'Connecting…' : 'Not connected';
 
     // The controls work while the light is off: they switch it on. They
     // only wait while the light can't be reached.
@@ -510,5 +536,11 @@ function slider(key, shown, stops) {
     $(`${key}-value`).textContent = shown;
 }
 
+restore();
 render();
 watch();
+
+// The service worker needs HTTPS, and is left out while editing on localhost.
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js');
+}
