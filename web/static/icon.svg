@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFC94D"/>
+      <stop offset="1" stop-color="#F2770C"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="512" cy="440" r="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="0.45" stop-color="#FFF4D6" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#FFF4D6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glass" cx="470" cy="380" r="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FFE29A"/>
+    </radialGradient>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6B5240"/>
+      <stop offset="1" stop-color="#3B2B20"/>
+    </linearGradient>
+  </defs>
+  <rect x="96" y="96" width="832" height="832" rx="189" fill="url(#bg)"/>
+  <circle cx="512" cy="440" r="380" fill="url(#glow)"/>
+  <path fill="url(#glass)" d="M432 650 C432 620 395 600 370.6 571.4 A200 200 0 1 1 653.4 571.4 C629 600 592 620 592 650 Z"/>
+  <path fill="none" stroke="#F59E0B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" d="M470 640 L470 500 L491 468 L512 500 L533 468 L554 500 L554 640"/>
+  <path fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round" opacity="0.85" d="M372 420 A142 142 0 0 1 452 304"/>
+  <rect x="424" y="668" width="176" height="42" rx="21" fill="url(#base)"/>
+  <rect x="440" y="722" width="144" height="42" rx="21" fill="url(#base)"/>
+  <rect x="474" y="776" width="76" height="34" rx="17" fill="url(#base)"/>
+</svg>

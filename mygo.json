@@ -1,0 +1,9 @@
+{
+  "name": "Yeelight",
+  "identifier": "com.example.yeelight",
+  "version": "0.0.1",
+  "out": "build",
+  "linux": {
+    "comment": "Control a Yeelight bulb over the LAN"
+  }
+}

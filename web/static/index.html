@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Yeelight</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Yeelight">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main>
+        <header>
+            <div class="title">
+                <h1 id="name">Yeelight</h1>
+                <p id="status-line" class="muted">Looking for the light…</p>
+            </div>
+            <div class="spinner" id="spinner" role="status" aria-label="Loading"></div>
+            <button id="refresh" class="icon-button" aria-label="Refresh" title="Refresh">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                    <path d="M16 16h5v5" />
+                </svg>
+            </button>
+        </header>
+
+        <section class="power">
+            <button id="power" aria-label="Power" title="Turn on or off" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+                    <path d="M9 18h6" />
+                    <path d="M10 22h4" />
+                </svg>
+            </button>
+            <p id="power-status" class="muted">Not connected</p>
+        </section>
+
+        <section id="controls" class="card disabled" inert>
+            <div class="segmented" role="radiogroup" aria-label="Mode">
+                <button role="radio" data-mode="scheme">Scheme</button>
+                <button role="radio" data-mode="white">White</button>
+                <button role="radio" data-mode="color">Color</button>
+            </div>
+            <label class="slider" data-for="white color">
+                <span class="row"><span>Brightness</span><span id="bright-value" class="muted"></span></span>
+                <input id="bright" type="range" min="1" max="100" step="1">
+            </label>
+            <label class="slider" data-for="white">
+                <span class="row"><span>Temperature</span><span id="ct-value" class="muted"></span></span>
+                <input id="ct" type="range" min="1700" max="6500" step="1">
+            </label>
+            <label class="slider" data-for="color">
+                <span class="row"><span>Hue</span><span id="hue-value" class="muted"></span></span>
+                <input id="hue" type="range" min="0" max="359" step="1">
+            </label>
+            <label class="slider" data-for="color">
+                <span class="row"><span>Saturation</span><span id="sat-value" class="muted"></span></span>
+                <input id="sat" type="range" min="0" max="100" step="1">
+            </label>
+            <div class="schemes" data-for="scheme">
+                <ul id="scheme-list" class="scheme-list"></ul>
+                <p id="scheme-empty" class="small muted">No schemes yet. Save the light's current setting to set it
+                    again with one tap.</p>
+                <form id="scheme-save" class="row">
+                    <input id="scheme-name" class="text" type="text" placeholder="Name" maxlength="40"
+                        autocomplete="off" spellcheck="false" enterkeyhint="done">
+                    <button type="submit" id="scheme-save-button" class="button" disabled>Save</button>
+                </form>
+            </div>
+        </section>
+
+        <div class="spacer"></div>
+
+        <form id="settings" class="settings">
+            <label for="address" class="small muted">Light address</label>
+            <div class="row">
+                <input id="address" class="text" type="text" placeholder="Discover automatically" autocomplete="off"
+                    autocapitalize="off" spellcheck="false" inputmode="url">
+                <button type="submit" class="button">Connect</button>
+            </div>
+            <p class="small muted">"LAN Control" must be on for the light in the Yeelight app.</p>
+        </form>
+    </main>
+    <script src="app.js"></script>
+</body>
+
+</html>

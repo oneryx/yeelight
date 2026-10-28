@@ -1,0 +1,72 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# The Docker image is built and published by GitHub Actions, see
+# .github/workflows/docker.yml. The native app is only built here.
+
+version: '3'
+
+vars:
+  PLATFORMS: darwin/universal,windows/amd64,windows/arm64,linux/amd64,linux/arm64
+
+tasks:
+
+  default:
+    desc: Run the native app in development mode, with live reload
+    cmds:
+      - go tool mygo dev
+
+  serve:
+    desc: Run the web server on :10000, serving the page from web/static on disk
+    cmds:
+      - go run ./cmd/server -dev
+
+  test:
+    desc: Run the tests, against a fake light on localhost
+    cmds:
+      - go test ./...
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  build:
+    desc: Build the native app for this machine into build/
+    cmds:
+      - go tool mygo build
+
+  install:
+    desc: Build the native app and install it into /Applications (macOS)
+    platforms: [darwin]
+    vars:
+      APP: build/darwin-{{ARCH}}/Yeelight.app
+    cmds:
+      - task: build
+      - pkill -x Yeelight || true # quit the installed app if it's running
+      - rm -rf /Applications/Yeelight.app
+      - ditto "{{.APP}}" /Applications/Yeelight.app
+      - open /Applications/Yeelight.app
+
+  build-all:
+    desc: Build the native app for macOS, Windows and Linux into build/
+    cmds:
+      - go tool mygo build -platform {{.PLATFORMS}}
+
+  docker-build:
+    desc: Build the image for this machine locally (runs the tests too), to check it before pushing
+    cmds:
+      - docker build -t yeelight:dev .
+
+  icon:
+    desc: Render assets/icon.svg to resources/icon.png and the page's icons
+    sources:
+      - assets/icon.svg
+    generates:
+      - resources/icon.png
+      - web/static/icon.svg
+      - web/static/icon-512.png
+      - web/static/apple-touch-icon.png
+    cmds:
+      - go run ./tools/icon
+      - cp assets/icon.svg web/static/icon.svg
+      - sips -z 512 512 resources/icon.png --out web/static/icon-512.png
+      - sips -z 180 180 resources/icon.png --out web/static/apple-touch-icon.png

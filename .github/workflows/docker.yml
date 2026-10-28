@@ -1,0 +1,69 @@
+name: docker
+
+# Pushes to main publish :latest, v* tags publish the version tags, pull requests only build.
+# Docs and the native app (built locally, not in the image) don't trigger a build.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths-ignore: &ignore
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - 'main.go'
+      - 'mygo.json'
+      - 'assets/**'
+      - 'resources/**'
+      - 'tools/**'
+      - 'Taskfile.yml'
+  pull_request:
+    paths-ignore: *ignore
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
+      # Tests run inside the Docker build, so a failing test fails the job
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
