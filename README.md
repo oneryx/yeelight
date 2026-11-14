@@ -24,7 +24,7 @@ Download the app for your system from the [latest release](https://github.com/on
 | System                | File                                                                                    |
 | --------------------- | --------------------------------------------------------------------------------------- |
 | macOS                 | `Yeelight.<version>.dmg` (Apple Silicon and Intel): open it, drag Yeelight to Applications |
-| Windows               | `Yeelight.Setup.<version>.amd64.exe` (or `arm64`): run the installer                    |
+| Windows               | `yeelight-setup-<version>-amd64.exe` (or `arm64`): run the installer                    |
 | Debian, Ubuntu        | `yeelight_<version>_amd64.deb` (or `arm64`): `sudo apt install ./yeelight_*.deb`        |
 | Other Linux           | `yeelight-<version>-linux-amd64.tar.gz` (or `arm64`) and `install.sh`: download both into one folder and run `sh install.sh` |
 

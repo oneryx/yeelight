@@ -58,7 +58,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           shopt -s nullglob
-          files=(build/*/*.dmg build/*/*Setup*.exe build/*/*.deb build/*/*.tar.gz)
+          files=(build/*/*.dmg build/*/*[Ss]etup*.exe build/*/*.deb build/*/*.tar.gz)
           test ${#files[@]} -gt 0
           gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
           if [ "${{ matrix.name }}" = Linux ]; then
