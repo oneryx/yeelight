@@ -35,7 +35,14 @@ tasks:
       - go tool mygo build
 
   install:
-    desc: Build the native app and install it into /Applications (macOS)
+    desc: "Build the native app and install it (macOS: /Applications, Linux: ~/.local, Windows: run the installer)"
+    cmds:
+      - task: install-darwin
+      - task: install-linux
+      - task: install-windows
+
+  install-darwin:
+    internal: true
     platforms: [darwin]
     vars:
       APP: build/darwin-{{ARCH}}/Yeelight.app
@@ -45,6 +52,21 @@ tasks:
       - rm -rf /Applications/Yeelight.app
       - ditto "{{.APP}}" /Applications/Yeelight.app
       - open /Applications/Yeelight.app
+
+  install-linux:
+    internal: true
+    platforms: [linux]
+    cmds:
+      - task: build
+      - pkill -x yeelight || true # quit the installed app if it's running
+      - sh build/linux-{{ARCH}}/install.sh
+
+  install-windows:
+    internal: true
+    platforms: [windows]
+    cmds:
+      - task: build
+      - powershell -NoProfile -Command "Start-Process -Wait (Get-ChildItem build/windows-{{ARCH}}/*setup*.exe).FullName"
 
   build-all:
     desc: Build the native app for macOS, Windows and Linux into build/

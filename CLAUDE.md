@@ -14,7 +14,7 @@ task serve         # web server on :10000, page read from web/static on disk (-d
 task test          # go test ./...  (against a fake bulb, no real light needed)
 task vet
 task build         # desktop app for this machine into build/; build-all for every platform
-task install       # macOS: build and install into /Applications
+task install       # build and install: /Applications (macOS), ~/.local via install.sh (Linux), setup exe (Windows)
 task docker-build  # local image build; runs the tests inside the build
 task icon          # regenerate icons from assets/icon.svg (uses macOS sips)
 go test ./web -run TestName   # single test

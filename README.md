@@ -157,7 +157,7 @@ Building needs [Go](https://go.dev) 1.27+ and [Task](https://taskfile.dev):
 
 ```sh
 task build         # build the app for this machine into build/
-task install       # macOS: build, install into /Applications and open it
+task install       # build and install: /Applications (macOS), ~/.local (Linux), the installer (Windows)
 task build-all     # build for macOS, Windows and Linux
 ```
 
