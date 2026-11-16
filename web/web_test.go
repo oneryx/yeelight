@@ -198,6 +198,44 @@ func TestSchemes(t *testing.T) {
 		t.Errorf("rename: %d", code)
 	}
 
+	status("POST", "/api/schemes", `{"name":"Night","mode":"white","bright":5,"ct":2000}`)
+	if code := status("POST", "/api/schemes/Night/move", `{"index":0}`); code != http.StatusNoContent {
+		t.Errorf("move: %d", code)
+	}
+	if got := names(); !slices.Equal(got, []string{"Night", "Work", "Red / dim"}) {
+		t.Fatalf("schemes after moving up %q", got)
+	}
+	status("POST", "/api/schemes/Night/move", `{"index":2}`)
+	if got := names(); !slices.Equal(got, []string{"Work", "Red / dim", "Night"}) {
+		t.Fatalf("schemes after moving down %q", got)
+	}
+	if code := status("POST", "/api/schemes/Night/move", `{"index":3}`); code != http.StatusBadRequest {
+		t.Errorf("move past the end: %d", code)
+	}
+	if code := status("POST", "/api/schemes/Nope/move", `{"index":0}`); code != http.StatusNotFound {
+		t.Errorf("move missing: %d", code)
+	}
+	status("DELETE", "/api/schemes/Night", "")
+
+	status("POST", "/api/schemes", `{"name":"Night","mode":"white","bright":5,"ct":2000}`)
+	if code := status("POST", "/api/schemes/Night/move", `{"index":0}`); code != http.StatusNoContent {
+		t.Errorf("move: %d", code)
+	}
+	if got := names(); !slices.Equal(got, []string{"Night", "Work", "Red / dim"}) {
+		t.Fatalf("schemes after moving up %q", got)
+	}
+	status("POST", "/api/schemes/Night/move", `{"index":2}`)
+	if got := names(); !slices.Equal(got, []string{"Work", "Red / dim", "Night"}) {
+		t.Fatalf("schemes after moving down %q", got)
+	}
+	if code := status("POST", "/api/schemes/Night/move", `{"index":3}`); code != http.StatusBadRequest {
+		t.Errorf("move past the end: %d", code)
+	}
+	if code := status("POST", "/api/schemes/Nope/move", `{"index":0}`); code != http.StatusNotFound {
+		t.Errorf("move missing: %d", code)
+	}
+	status("DELETE", "/api/schemes/Night", "")
+
 	st := waitState(t, ts, 0, func(st State) bool { return st.Connected })
 	if code := status("POST", "/api/schemes/Red%20%2F%20dim/apply", ""); code != http.StatusAccepted {
 		t.Fatalf("apply: %d", code)

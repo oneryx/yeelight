@@ -113,7 +113,8 @@ behind a reverse proxy with a certificate (Traefik, Caddy, nginx, …) if you wa
 
 - The round button switches the light on and off.
 - **Scheme** saves the light's current setting (brightness, and temperature or color) under a name. Tap a scheme to
-  set the light to it, which also switches it on. The pencil renames a scheme and the bin deletes it. Saving under
+  set the light to it, which also switches it on. Drag a scheme by its grip to reorder the list (or focus
+  the grip and use the arrow keys). The pencil renames a scheme and the bin deletes it. Saving under
   an existing name replaces that scheme, and a check marks the scheme the light is in.
 - **White** sets brightness and color temperature; **Color** sets brightness, hue and saturation. Moving a slider
   while the light is off switches it on.
@@ -199,6 +200,7 @@ curl -X POST http://localhost:10000/api/schemes/Reading/apply
 | PUT    | `/api/schemes/{name}`       | `{"name": "New name"}`     | Rename; 409 if the name is taken                      |
 | DELETE | `/api/schemes/{name}`       |                            |                                                       |
 | POST   | `/api/schemes/{name}/apply` |                            | Set the light to the scheme, switching it on          |
+| POST   | `/api/schemes/{name}/move`  | `{"index": 0}`             | Move the scheme to that position in the list          |
 | GET    | `/healthz`                  |                            | Web server health                                     |
 
 Commands are queued and answer 202 at once; their outcome shows in the state (`error`). Invalid input answers 400

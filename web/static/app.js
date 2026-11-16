@@ -58,6 +58,8 @@ const app = {
     confirmTimer: null,
     schemesShown: '', // what the scheme list was last built from
     rebuilding: false, // the scheme list is being rebuilt
+    dragging: false, // a scheme is being dragged to another place in the list
+    focusGrip: null, // the name of the scheme whose grip takes the focus once the list is rebuilt
 };
 
 // Colors
@@ -351,6 +353,56 @@ function deleteScheme(name) {
     send(schemePath(name), null, 'DELETE');
 }
 
+// moveScheme moves the scheme to the index in the list, showing it there at once.
+async function moveScheme(name, index) {
+    const before = app.server.schemes;
+    if (!findScheme(name)) return render();
+    const schemes = before.filter((sc) => sc.name !== name);
+    schemes.splice(index, 0, findScheme(name));
+    app.server = { ...app.server, schemes };
+    render();
+    if (!(await send(`${schemePath(name)}/move`, { index }))) {
+        app.server = { ...app.server, schemes: before };
+        render();
+    }
+}
+
+// startDrag drags the scheme of the list item li by its grip, from its index
+// in the list: the others make room for it, and dropping it moves it there.
+function startDrag(e, li, name, from) {
+    const items = [...els.schemeList.children];
+    if (e.button !== 0 || app.dragging || items.length < 2) return;
+    e.preventDefault();
+    const grip = e.currentTarget;
+    grip.setPointerCapture(e.pointerId);
+    const step = items[1].offsetTop - items[0].offsetTop;
+    let to = from;
+    app.dragging = true;
+    li.classList.add('dragging');
+
+    const move = (ev) => {
+        const dy = Math.max(-from * step, Math.min((items.length - 1 - from) * step, ev.clientY - e.clientY));
+        to = from + Math.round(dy / step);
+        li.style.transform = `translateY(${dy}px)`;
+        items.forEach((item, k) => {
+            const shift = k > from && k <= to ? -step : k < from && k >= to ? step : 0;
+            if (item !== li) item.style.transform = shift ? `translateY(${shift}px)` : '';
+        });
+    };
+    const end = (ev) => {
+        grip.removeEventListener('pointermove', move);
+        grip.removeEventListener('pointerup', end);
+        grip.removeEventListener('pointercancel', end);
+        app.dragging = false;
+        app.schemesShown = '';
+        if (ev.type === 'pointerup' && to !== from) moveScheme(name, to);
+        else render();
+    };
+    grip.addEventListener('pointermove', move);
+    grip.addEventListener('pointerup', end);
+    grip.addEventListener('pointercancel', end);
+}
+
 els.schemeName.addEventListener('input', render);
 
 // Saving stores the light's setting as it shines, whichever tab was shown.
@@ -439,12 +491,15 @@ function renderSchemes() {
     els.schemeSaveButton.textContent = findScheme(name) ? 'Replace' : 'Save';
     els.schemeEmpty.hidden = schemes.length > 0;
 
-    // Rebuild the list only when it changes, which keeps a rename's field.
+    // Rebuild the list only when it changes, which keeps a rename's field,
+    // and not while a scheme is dragged.
+    if (app.dragging) return;
     const current = schemes.map(isCurrent);
     const shown = JSON.stringify([schemes, current, app.renaming, app.confirming]);
     if (shown === app.schemesShown) return;
     app.schemesShown = shown;
 
+    let focus = null;
     const items = schemes.map((sc, i) => {
         const swatch = node('span', { className: 'swatch' });
         swatch.style.background = css(sc.mode === 'white' ? kelvinColor(sc.ct) : hsvColor(sc.hue, sc.sat / 100, 1));
@@ -498,7 +553,20 @@ function renderSchemes() {
         }, confirming ? 'Delete' : icon(['M3 6h18', 'M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6', 'M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2']));
         del.addEventListener('click', () => deleteScheme(sc.name));
 
-        return node('li', { className: 'scheme' }, main, rename, del);
+        const grip = node('button', { className: 'grip', ariaLabel: `Move ${sc.name}`, title: 'Drag to reorder' },
+            icon(['M9 5h.01', 'M9 12h.01', 'M9 19h.01', 'M15 5h.01', 'M15 12h.01', 'M15 19h.01']));
+        grip.addEventListener('pointerdown', (e) => startDrag(e, li, sc.name, i));
+        grip.addEventListener('keydown', (e) => {
+            const to = { ArrowUp: i - 1, ArrowDown: i + 1 }[e.key];
+            if (to === undefined || to < 0 || to >= schemes.length) return;
+            e.preventDefault();
+            app.focusGrip = sc.name;
+            moveScheme(sc.name, to);
+        });
+        if (sc.name === app.focusGrip) focus = grip;
+
+        const li = node('li', { className: 'scheme' }, grip, main, rename, del);
+        return li;
     });
     app.rebuilding = true;
     try {
@@ -506,6 +574,8 @@ function renderSchemes() {
     } finally {
         app.rebuilding = false;
     }
+    app.focusGrip = null;
+    focus?.focus();
 }
 
 // node returns a new element with the properties and children.

@@ -254,6 +254,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("PUT /api/schemes/{name}", s.renameScheme)
 	mux.HandleFunc("DELETE /api/schemes/{name}", s.deleteScheme)
 	mux.HandleFunc("POST /api/schemes/{name}/apply", s.applyScheme)
+	mux.HandleFunc("POST /api/schemes/{name}/move", s.moveScheme)
 	return mux
 }
 
@@ -378,6 +379,26 @@ func (s *Server) deleteScheme(w http.ResponseWriter, r *http.Request) {
 			return nil, http.StatusNotFound, fmt.Errorf("no scheme %q", name)
 		}
 		return slices.Delete(schemes, i, i+1), 0, nil
+	})
+}
+
+// moveScheme moves the scheme {name} to the body's index in the list.
+func (s *Server) moveScheme(w http.ResponseWriter, r *http.Request) {
+	var v struct{ Index int }
+	if err := decode(w, r, &v); err != nil {
+		return
+	}
+	name := r.PathValue("name")
+	s.editSchemes(w, func(schemes []Scheme) ([]Scheme, int, error) {
+		i := slices.IndexFunc(schemes, func(o Scheme) bool { return o.Name == name })
+		if i < 0 {
+			return nil, http.StatusNotFound, fmt.Errorf("no scheme %q", name)
+		}
+		if v.Index < 0 || v.Index >= len(schemes) {
+			return nil, http.StatusBadRequest, fmt.Errorf("index must be 0-%d", len(schemes)-1)
+		}
+		sc := schemes[i]
+		return slices.Insert(slices.Delete(schemes, i, i+1), v.Index, sc), 0, nil
 	})
 }
 

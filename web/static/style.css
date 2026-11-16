@@ -382,6 +382,44 @@ input[type="range"]:focus-visible::-webkit-slider-thumb {
     display: flex;
     align-items: center;
     gap: 6px;
+    transition: transform 0.15s;
+}
+
+.scheme.dragging {
+    position: relative;
+    z-index: 1;
+    transition: none;
+}
+
+.scheme.dragging .scheme-main {
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+}
+
+.grip {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 44px;
+    margin-right: -4px;
+    padding: 0;
+    font-size: 16px;
+    color: var(--muted);
+    background: none;
+    border: none;
+    border-radius: var(--radius);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.grip svg {
+    stroke-width: 3;
+}
+
+.scheme.dragging .grip {
+    cursor: grabbing;
 }
 
 .scheme-main {
